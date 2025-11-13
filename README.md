@@ -1,4 +1,4 @@
-<img width="1797" height="900" alt="image" src="https://github.com/user-attachments/assets/349d354d-aa49-422a-8730-5520be5e4e87" /># Exp-5-Design-and-Simulate the-Memory-Design-using-Verilog-HDL
+# Exp-5-Design-and-Simulate the-Memory-Design-using-Verilog-HDL
 #Aim
 To design and simulate a RAM,ROM,FIFO using Verilog HDL, and verify its functionality through a testbench in the Vivado 2023.1 environment.
 Apparatus Required
@@ -133,12 +133,83 @@ endmodule
 
  # FIFO
  // write verilog code for FIFO
- 
- // Test bench
+ ```
+ module fifo1 #(parameter DEPTH=8, DATA_WIDTH=8) (input clk, rst_n,
+input w_en, r_en,
+input [DATA_WIDTH-1:0] data_in,
+output reg [DATA_WIDTH-1:0] data_out,
+output full, empty
+);
 
+reg [$clog2(DEPTH)-1:0] w_ptr, r_ptr;
+reg [DATA_WIDTH-1:0] fifo[DEPTH-1:0];
+
+// Set Default values on reset.
+always@(posedge clk) begin
+if(!rst_n) begin
+ w_ptr <= 0; r_ptr <= 0;
+ data_out <= 0;
+end
+end
+
+// To write data to FIFO
+always@(posedge clk) begin
+if(w_en & !full)begin
+ fifo[w_ptr] <= data_in;
+ w_ptr <= w_ptr + 1;
+ end
+ end
+
+// To read data from FIFO
+always@(posedge clk) begin
+if(r_en & !empty) begin
+ data_out <= fifo[r_ptr];
+ r_ptr <= r_ptr + 1;
+end
+end
+
+assign full = ((w_ptr+1'b1) == r_ptr);
+assign empty = (w_ptr == r_ptr);
+endmodule
+```
+ // Test bench
+```
+module fifo1_tb;
+reg clk_t, rst_t;
+reg w_en_t, r_en_t;
+reg [7:0] data_in_t;
+wire [7:0] data_out_t;
+wire full_t, empty_t;
+
+fifo1 dut (.clk(clk_t),.rst_n(rst_t),.w_en(w_en_t),.r_en(r_en_t),.data_in(data_in_t),
+.data_out(data_out_t),
+.full(full_t),
+.empty(empty_t)
+);
+
+always #10 clk_t = ~clk_t;
+
+initial begin
+clk_t = 1'b0;
+rst_t = 1'b0;
+w_en_t = 1'b0;
+r_en_t = 1'b0;
+data_in_t = 8'd0;
+
+#50 rst_t = 1'b1;
+#20 w_en_t = 1'b1; data_in_t = 8'd10;
+#20 data_in_t = 8'd20;
+#20 data_in_t = 8'd30;
+#20 data_in_t = 8'd40;
+#20 w_en_t = 1'b0;
+#40 r_en_t = 1'b1;
+#100 r_en_t = 1'b0;
+end
+endmodule
+```
 // output Waveform
 
-
+<img width="1590" height="832" alt="image" src="https://github.com/user-attachments/assets/b6fb177a-211d-49ce-92a9-308d05e780c2" />
 
 # Conclusion
 The RAM, ROM, FIFO memory with read and write operations was designed and successfully simulated using Verilog HDL. The testbench verified both the write and read functionalities by simulating the memory operations and observing the output waveforms. The experiment demonstrates how to implement memory operations in Verilog, effectively modeling both the reading and writing processes.
